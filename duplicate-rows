@@ -1,0 +1,11 @@
+=========delete duplicate rows keep once
+------
+delete from test a
+where rowid >
+(select min(rowid) from test b where a.id=b.id)
+
+========= find duplicate rows in a table
+----
+SELECT id,count(id) from test
+GROUP BY id
+HAVING COUNT(id) >1;
