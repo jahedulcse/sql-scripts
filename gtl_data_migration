@@ -1,0 +1,30 @@
+=========city corporation pourashava master data
+declare 
+cursor tt is
+select d.id,d.name,l.district from t_districts d, location_master l
+where d.name=l.district;
+begin
+for i in tt loop
+ update location_master
+ set district_id=i.id
+ where district=i.district;
+ end loop;
+ commit;
+end;
+
+insert into t_citycorp_pouroshava(
+name, name_BN, IS_CCDR, DISTRICT_ID)
+select distinct CITY_COR,CITY_COR_BN,decode(CCDR,'NO','0','YES','1'),DISTRICT_ID from location_master;
+commit;
+
+insert into t_wards (ward_no)
+select ward_no from location_master;
+commit;
+
+declare cursor tt is select c.id,c.name,l.ward_no from T_CITYCORP_POUROSHAVA c, location_master l
+where name= CITY_COR;
+begin
+for i in tt loop
+update t_wards set CITYCORP_POUROSHAVA_ID=i.id where ward_no=i.ward_no;
+end loop;
+end;
