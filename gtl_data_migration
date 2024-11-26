@@ -29,3 +29,60 @@ update t_wards set CITYCORP_POUROSHAVA_ID=i.id where ward_no=i.ward_no and distr
 end loop;
 commit;
 end;
+
+=====================================
+
+declare cursor tt is 
+select id,short_name from t_divisions;
+
+begin
+for i in tt loop
+update t_admin_user
+set loc_short_name=i.short_name
+where location_id=i.id
+and role_id=5;
+end loop;
+commit;
+end;
+
+
+declare cursor tt is 
+select id,short_name from t_districts;
+
+begin
+for i in tt loop
+update t_admin_user
+set loc_short_name=i.short_name
+where location_id=i.id
+and role_id in (7,16);
+end loop;
+commit;
+end;
+
+declare cursor tt is
+select d.id dis_id,SUBSTR(d.name, 1, 1) dis_short_name, u.id up_id, upper(substr(regexp_replace(u.name,'[^B, C, D, F, G, J, K, L, M, N, P, Q, S, T, V, X, Z, H, R, W, Y,
+b, c, d, f, g, j, k, l, m, n, p, q, s, t, v, x, z, h, r, w, y]'),1,3)) up_short_name
+from t_districts d, t_upazila u where d.id=u.district_id;
+
+begin
+for i in tt loop
+update t_upazila set short_name=concat(i.dis_short_name,i.up_short_name)
+where id=i.up_id;
+end loop;
+commit;
+end;
+
+
+declare cursor tt is 
+select id,short_name from t_upazila;
+
+begin
+for i in tt loop
+update t_admin_user
+set loc_short_name=i.short_name
+where location_id=i.id
+and role_id in (9,10,17);
+end loop;
+commit;
+end;
+
