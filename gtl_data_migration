@@ -32,6 +32,18 @@ end;
 
 ========================= Location update
 
+Role_ID	Role_name
+
+3	DG Food	
+5	RCF	division
+7	DCF	district
+9	UCF	upazila
+10	UNO	upazila
+15	CCDR	
+16	ACF	district
+17	UAO	upazila
+19	ARO	
+
 ALTER TABLE t_divisions ADD short_name VARCHAR(7);
 ALTER TABLE t_districts ADD short_name VARCHAR(7);
 ALTER TABLE t_upazila ADD short_name VARCHAR(7);
