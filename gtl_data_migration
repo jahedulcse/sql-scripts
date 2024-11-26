@@ -30,11 +30,33 @@ end loop;
 commit;
 end;
 
-=====================================
+========================= Location update
+
+ALTER TABLE t_divisions ADD short_name VARCHAR(7);
+ALTER TABLE t_districts ADD short_name VARCHAR(7);
+ALTER TABLE t_upazila ADD short_name VARCHAR(7);
+ALTER TABLE t_admin_user ADD loc_short_name VARCHAR(7);
+alter table t_divisions add constraint uk_divisions_shortname unique(short_name);
+alter table t_districts add constraint uk_districts_shortname unique(short_name);
+alter table t_upazila add constraint uk_upazila_shortname unique(short_name);
+
+--------- Division
+
+UPDATE t_divisions
+SET short_name = CASE name
+    WHEN 'Chattagram' THEN 'CTG'
+    WHEN 'Rajshahi' THEN 'RAJ'
+    WHEN 'Khulna' THEN 'KHU'
+    WHEN 'Barisal' THEN 'BAR'
+    WHEN 'Sylhet' THEN 'SYL'
+    WHEN 'Dhaka' THEN 'DHK'
+    WHEN 'Rangpur' THEN 'RAN'
+    WHEN 'Mymensingh' THEN 'MYM'
+    ELSE NULL -- Handle any unexpected cases
+END;
 
 declare cursor tt is 
 select id,short_name from t_divisions;
-
 begin
 for i in tt loop
 update t_admin_user
@@ -45,10 +67,79 @@ end loop;
 commit;
 end;
 
+------------- district 
+UPDATE t_districts
+SET short_name = CASE
+    WHEN name = 'Cumilla' THEN 'CUM'
+    WHEN name = 'Feni' THEN 'FEN'
+    WHEN name = 'Brahmanbaria' THEN 'BRA'
+    WHEN name = 'Rangamati' THEN 'RAN'
+    WHEN name = 'Noakhali' THEN 'NOA'
+    WHEN name = 'Chandpur' THEN 'CHD'
+    WHEN name = 'Lakshmipur' THEN 'LAK'
+    WHEN name = 'Chattogram' THEN 'DCTG'
+    WHEN name = 'Coxsbazar' THEN 'COX'
+    WHEN name = 'Khagrachhari' THEN 'KHA'
+    WHEN name = 'Bandarban' THEN 'BAN'
+    WHEN name = 'Sirajganj' THEN 'SIR'
+    WHEN name = 'Pabna' THEN 'PAB'
+    WHEN name = 'Bogura' THEN 'BOG'
+    WHEN name = 'Rajshahi' THEN 'DRAJ'
+    WHEN name = 'Natore' THEN 'NAT'
+    WHEN name = 'Joypurhat' THEN 'JOY'
+    WHEN name = 'Chapainawabganj' THEN 'CHA'
+    WHEN name = 'Naogaon' THEN 'NAO'
+    WHEN name = 'Jashore' THEN 'JAS'
+    WHEN name = 'Satkhira' THEN 'SAT'
+    WHEN name = 'Meherpur' THEN 'MEH'
+    WHEN name = 'Narail' THEN 'NAR'
+    WHEN name = 'Chuadanga' THEN 'CHU'
+    WHEN name = 'Kushtia' THEN 'KUS'
+    WHEN name = 'Magura' THEN 'MAG'
+    WHEN name = 'Khulna' THEN 'DKHU'
+    WHEN name = 'Bagerhat' THEN 'BAG'
+    WHEN name = 'Jhenaidah' THEN 'JHE'
+    WHEN name = 'Jhalakathi' THEN 'JHA'
+    WHEN name = 'Patuakhali' THEN 'PAT'
+    WHEN name = 'Pirojpur' THEN 'PIR'
+    WHEN name = 'Barisal' THEN 'DBAR'
+    WHEN name = 'Bhola' THEN 'BHO'
+    WHEN name = 'Barguna' THEN 'BGR'
+    WHEN name = 'Sylhet' THEN 'DSYL'
+    WHEN name = 'Moulvibazar' THEN 'MOU'
+    WHEN name = 'Habiganj' THEN 'HAB'
+    WHEN name = 'Sunamganj' THEN 'SUN'
+    WHEN name = 'Narsingdi' THEN 'NAR'
+    WHEN name = 'Gazipur' THEN 'GAZ'
+    WHEN name = 'Shariatpur' THEN 'SHA'
+    WHEN name = 'Narayanganj' THEN 'NAR'
+    WHEN name = 'Tangail' THEN 'TAN'
+    WHEN name = 'Kishoreganj' THEN 'KIS'
+    WHEN name = 'Manikganj' THEN 'MAN'
+    WHEN name = 'Dhaka' THEN 'DDHK'
+    WHEN name = 'Munshiganj' THEN 'MUN'
+    WHEN name = 'Rajbari' THEN 'RJB'
+    WHEN name = 'Madaripur' THEN 'MAD'
+    WHEN name = 'Gopalganj' THEN 'GOP'
+    WHEN name = 'Faridpur' THEN 'FAR'
+    WHEN name = 'Panchagarh' THEN 'PAN'
+    WHEN name = 'Dinajpur' THEN 'DIN'
+    WHEN name = 'Lalmonirhat' THEN 'LAL'
+    WHEN name = 'Nilphamari' THEN 'NIL'
+    WHEN name = 'Gaibandha' THEN 'GAI'
+    WHEN name = 'Thakurgaon' THEN 'THA'
+    WHEN name = 'Rangpur' THEN 'DRAN'
+    WHEN name = 'Kurigram' THEN 'KUR'
+    WHEN name = 'Sherpur' THEN 'SHE'
+    WHEN name = 'Mymensingh' THEN 'DMYM'
+    WHEN name = 'Jamalpur' THEN 'JAM'
+    WHEN name = 'Netrokona' THEN 'NET'
+    ELSE NULL
+END;
+
 
 declare cursor tt is 
 select id,short_name from t_districts;
-
 begin
 for i in tt loop
 update t_admin_user
@@ -59,11 +150,12 @@ end loop;
 commit;
 end;
 
+----------- upazila
+
 declare cursor tt is
 select d.id dis_id,SUBSTR(d.name, 1, 1) dis_short_name, u.id up_id, upper(substr(regexp_replace(u.name,'[^B, C, D, F, G, J, K, L, M, N, P, Q, S, T, V, X, Z, H, R, W, Y,
 b, c, d, f, g, j, k, l, m, n, p, q, s, t, v, x, z, h, r, w, y]'),1,3)) up_short_name
 from t_districts d, t_upazila u where d.id=u.district_id;
-
 begin
 for i in tt loop
 update t_upazila set short_name=concat(i.dis_short_name,i.up_short_name)
@@ -75,7 +167,6 @@ end;
 
 declare cursor tt is 
 select id,short_name from t_upazila;
-
 begin
 for i in tt loop
 update t_admin_user
