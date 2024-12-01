@@ -189,3 +189,29 @@ end loop;
 commit;
 end;
 
+------------------
+declare cursor tt is 
+select id,short_name from t_districts;
+begin
+for i in tt loop
+update t_fgl_user_regs
+set loc_short_name=i.short_name
+where BUSINESSTYPE not in (3,6)
+and DISTRICT=i.id;
+end loop;
+commit;
+end;
+
+
+declare cursor tt is 
+select id,short_name from t_upazila;
+begin
+for i in tt loop
+update t_fgl_user_regs
+set loc_short_name=i.short_name
+where BUSINESSTYPE in (3,6)
+and UPZILLA=i.id;
+end loop;
+commit;
+end;
+
