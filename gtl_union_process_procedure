@@ -1,0 +1,133 @@
+gtl_union_process_procedure
+-------------------------------
+
+CREATE OR REPLACE PROCEDURE FOODPROD.FINAL_REPORT_150824 AS
+
+V_TOT_BEN          number;
+V_NEW_BEN          number;
+V_TOT_UDC_VERIFIED number;
+V_TOT_UCF_APPROVED number;
+V_TOT_UCF_RETURNED number;
+V_TOT_UCF_REJECTED number;
+V_TOT_WVB_SELF number;
+V_TOT_WVB_SPOUSE  number;
+V_TOT_UCF_NOT_VERIFIED number;
+V_MALE_COUNT number;
+V_FEMALE_COUNT number;
+V_DEALER_COUNT number;
+V_ADD_DEALER_COUNT number;
+V_ALREADY_UPLOADED_COUNT number;
+
+
+BEGIN
+DECLARE
+
+CURSOR c_recov IS
+
+    select id from t_unions where status = 1;
+
+r_recov c_recov%ROWTYPE;
+
+    BEGIN
+      FOR r_recov IN c_recov
+      LOOP
+
+        EXIT WHEN c_recov%NOTFOUND;
+        
+        SELECT COUNT(id) INTO V_TOT_BEN FROM T_BENEFICIARIES WHERE union_id  = r_recov.id;
+        --SELECT COUNT(id) INTO V_NEW_BEN FROM T_BENEFICIARIES WHERE union_id  = r_recov.id and to_char(CREATED_AT,'mm-dd-yyyy') > '10-20-2022';
+        
+        SELECT COUNT(t0.id) INTO V_TOT_UDC_VERIFIED FROM T_VERIFIED_BENEFICIARIES t0 
+        INNER JOIN T_BENEFICIARIES t1 on t0.RAW_DATA_ID = t1.id
+        INNER JOIN T_FILE_NAMES t2 on t1.FILE_ID = t2.ID
+        WHERE t0.union_id  = r_recov.id and t0.status = 99 and t2.status not in (11, 1);
+        
+        SELECT COUNT(t0.id) INTO V_TOT_UCF_APPROVED FROM T_VERIFIED_BENEFICIARIES t0
+        INNER JOIN T_BENEFICIARIES t1 on t0.RAW_DATA_ID = t1.id
+        INNER JOIN T_FILE_NAMES t2 on t1.FILE_ID = t2.ID
+        WHERE t0.union_id  = r_recov.id and t0.status = 99 and t0.final_status= 4099 and t2.status not in (11, 1);
+        
+        SELECT COUNT(t0.id) INTO V_TOT_UCF_RETURNED FROM T_VERIFIED_BENEFICIARIES t0
+        INNER JOIN T_BENEFICIARIES t1 on t0.RAW_DATA_ID = t1.id
+        INNER JOIN T_FILE_NAMES t2 on t1.FILE_ID = t2.ID
+        WHERE t0.union_id  = r_recov.id 
+            and t0.status = 99 and t0.final_status in (4001,4002,4003) and t2.status not in (11, 1);
+            
+        SELECT COUNT(t0.id) INTO V_TOT_UCF_REJECTED FROM T_VERIFIED_BENEFICIARIES t0
+        INNER JOIN T_BENEFICIARIES t1 on t0.RAW_DATA_ID = t1.id
+        INNER JOIN T_FILE_NAMES t2 on t1.FILE_ID = t2.ID
+        WHERE t0.union_id  = r_recov.id 
+           and t0.status = 99 and t0.final_status in (4004,4005,4007,4009,4010) and t2.status not in (11, 1);
+            
+        SELECT COUNT(t0.id) INTO V_TOT_UCF_NOT_VERIFIED FROM T_VERIFIED_BENEFICIARIES t0
+        INNER JOIN T_BENEFICIARIES t1 on t0.RAW_DATA_ID = t1.id
+        INNER JOIN T_FILE_NAMES t2 on t1.FILE_ID = t2.ID
+        WHERE t0.union_id  = r_recov.id 
+            and t0.status = 99 and t0.final_status = 0 and t2.status not in (11, 1);
+        
+        SELECT COUNT(t0.id) INTO V_TOT_WVB_SELF FROM T_VERIFIED_BENEFICIARIES t0
+        INNER JOIN T_BENEFICIARIES t1 on t0.RAW_DATA_ID = t1.id
+        INNER JOIN T_FILE_NAMES t2 on t1.FILE_ID = t2.ID
+        WHERE t0.union_id  = r_recov.id 
+           and  t0.final_status = '4006' and t0.status = 99 and t0.VGD_STATUS = 'Y' and t2.status not in (11, 1);
+            
+        SELECT COUNT(t0.id) INTO V_TOT_WVB_SPOUSE FROM T_VERIFIED_BENEFICIARIES t0
+        INNER JOIN T_BENEFICIARIES t1 on t0.RAW_DATA_ID = t1.id
+        INNER JOIN T_FILE_NAMES t2 on t1.FILE_ID = t2.ID
+        WHERE t0.union_id  = r_recov.id 
+           and  t0.final_status = '4006' and t0.status = 99 and t0.VGD_STATUS = 'W' and t2.status not in (11, 1);
+           
+        SELECT COUNT(id) into V_DEALER_COUNT from t_dealer_masters where union_id = r_recov.id;
+        SELECT COUNT(id) into V_ADD_DEALER_COUNT from t_dealer_masters where additional_union_id = r_recov.id and union_id != additional_union_id;
+        
+            
+        SELECT COUNT(t0.id) INTO V_MALE_COUNT FROM T_VERIFIED_BENEFICIARIES t0
+        INNER JOIN T_BENEFICIARIES t1 on t0.RAW_DATA_ID = t1.id
+        INNER JOIN T_FILE_NAMES t2 on t1.FILE_ID = t2.ID
+        WHERE t0.union_id  = r_recov.id and t0.status = 99 and t0.final_status= 4099 and t0.ec_gender = 'male' and t2.status not in (11, 1);
+        
+        SELECT COUNT(t0.id) INTO V_FEMALE_COUNT FROM T_VERIFIED_BENEFICIARIES t0
+        INNER JOIN T_BENEFICIARIES t1 on t0.RAW_DATA_ID = t1.id
+        INNER JOIN T_FILE_NAMES t2 on t1.FILE_ID = t2.ID
+        WHERE t0.union_id  = r_recov.id and t0.status = 99 and t0.final_status= 4099 and t0.ec_gender in('female','hijra') and t2.status not in (11, 1);
+        
+        SELECT COUNT(t0.id) INTO V_ALREADY_UPLOADED_COUNT FROM T_BENEFICIARIES t0
+        INNER JOIN T_FILE_NAMES t1 on t0.FILE_ID = t1.ID
+        WHERE t0.union_id  = r_recov.id and t1.status in (11, 1);
+            
+            
+        
+        if(V_TOT_BEN > 0 ) THEN
+        
+        update T_UNIONS set TOTAL_BENEFICIARY = V_TOT_BEN  WHERE id = r_recov.id;
+        update T_UNIONS set NEW_UPLOADED_BEN = V_NEW_BEN  WHERE id = r_recov.id;
+        
+        update T_UNIONS set UDC_VERIFIED_BEN = V_TOT_UDC_VERIFIED  WHERE id = r_recov.id;
+        update T_UNIONS set UDC_NOT_VERIFIED_BEN = V_TOT_BEN - V_TOT_UDC_VERIFIED  WHERE id = r_recov.id;
+        
+        update T_UNIONS set UCF_NOT_VERIFIED_BEN = V_TOT_UCF_NOT_VERIFIED  WHERE id = r_recov.id;
+        
+               
+        update T_UNIONS set UCF_APPROVED_BEN = V_TOT_UCF_APPROVED  WHERE id = r_recov.id;
+        update T_UNIONS set UCF_RETURNED_BEN = V_TOT_UCF_RETURNED  WHERE id = r_recov.id;
+        update T_UNIONS set UCF_REJECTED_BEN = V_TOT_UCF_REJECTED  WHERE id = r_recov.id;
+        update T_UNIONS set VWB_OWN_BEN = V_TOT_WVB_SELF  WHERE id = r_recov.id;
+        update T_UNIONS set VWB_SPOUSE_BEN = V_TOT_WVB_SPOUSE  WHERE id = r_recov.id;
+        update T_UNIONS set UPLOADABLE_BEN = V_TOT_BEN - V_TOT_UCF_APPROVED - V_ALREADY_UPLOADED_COUNT  WHERE id = r_recov.id;
+        
+        update T_UNIONS set male_count = V_MALE_COUNT WHERE id = r_recov.id;
+        update T_UNIONS set female_count = V_FEMALE_COUNT WHERE id = r_recov.id;
+        
+        update T_UNIONS set dealer_count = V_DEALER_COUNT + V_ADD_DEALER_COUNT WHERE id = r_recov.id;
+        update T_UNIONS set already_uploaded = V_ALREADY_UPLOADED_COUNT WHERE id = r_recov.id;
+        
+        COMMIT;
+        
+        end if;
+        
+        
+      END LOOP;
+
+    END;
+END;
+/
